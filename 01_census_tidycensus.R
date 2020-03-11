@@ -245,7 +245,11 @@ joined <- left_join(allcounties_wide, unemployment_forjoin)
 
 names(joined)
 
+joined <- joined %>% 
+  select(1:9, unemployment_rate_2018, everything())
 
+#save back under original main table name
+allcounties_wide <- joined
 
 # save result ####
 saveRDS(allcounties_wide, "processed_data/allcounties_wide.rds")
