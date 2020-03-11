@@ -18,8 +18,8 @@ myvars <- c(totalpop = "B01003_001",
             medincome = "B19013_001",
             medage = "B01002_001",
             medhomevalue = "B25077_001",
-            laborforce.civ.total = "B23025_003",
-            laborforce.civ.unemployed = "B23025_005",
+            # laborforce.civ.total = "B23025_003",
+            # laborforce.civ.unemployed = "B23025_005",
             education.total = "B06009_001",
             education.bachelors = "B06009_005",  
             education.gradprofess = "B06009_006"
@@ -118,7 +118,7 @@ names(allcounties_wide)
 ### PERCENTAGE CALCULATIONS #####
 
 #unemployement (civilians only)
-allcounties_wide$pct.civ.unemployed <- round_half_up(allcounties_wide$laborforce.civ.unemployed/allcounties_wide$laborforce.civ.total*100, 3)
+# allcounties_wide$pct.civ.unemployed <- round_half_up(allcounties_wide$laborforce.civ.unemployed/allcounties_wide$laborforce.civ.total*100, 3)
 #college and grad students need to be added here to make up the numerator
 allcounties_wide$pct.ed.college.all <- round_half_up((allcounties_wide$education.bachelors+allcounties_wide$education.gradprofess)/allcounties_wide$education.total*100, 3)
 
@@ -132,13 +132,10 @@ allcounties_wide <- allcounties_wide %>%
     medincome,
     medage,
     medhomevalue,
-    pct.civ.unemployed,
-    laborforce.civ.total,
-    laborforce.civ.unemployed,
-    pct.ed.college.all,
-    education.total,
-    education.bachelors,
-    education.gradprofess
+    # pct.civ.unemployed,
+    # laborforce.civ.total,
+    # laborforce.civ.unemployed,
+    pct.ed.college.all
   )
 
 
@@ -165,7 +162,7 @@ colnames(national) <- sub("E$", "", colnames(national)) # $ means end of string 
 names(national)
 
 #unemployement (civilians only)
-national$pct.civ.unemployed <- round_half_up(national$laborforce.civ.unemployed/national$laborforce.civ.total*100, 3)
+# national$pct.civ.unemployed <- round_half_up(national$laborforce.civ.unemployed/national$laborforce.civ.total*100, 3)
 #college and grad students need to be added here to make up the numerator
 national$pct.ed.college.all <- round_half_up((national$education.bachelors+national$education.gradprofess)/national$education.total*100, 3)
 
@@ -180,7 +177,7 @@ national <- national %>%
     natl.medincome = medincome,
     natl.medage = medage,
     natl.medhomevalue = medhomevalue,
-    natl.pct.civ.unemployed = pct.civ.unemployed,
+    # natl.pct.civ.unemployed = pct.civ.unemployed,
     natl.pct.ed.college.all = pct.ed.college.all
   )
 
@@ -193,7 +190,7 @@ national
 allcounties_wide$natl.medincome <- national$natl.medincome
 allcounties_wide$natl.medage <- national$natl.medage
 allcounties_wide$natl.medhomevalue <- national$natl.medhomevalue
-allcounties_wide$natl.pct.civ.unemployed <- national$natl.pct.civ.unemployed
+# allcounties_wide$natl.pct.civ.unemployed <- national$natl.pct.civ.unemployed
 allcounties_wide$natl.pct.ed.college.all <- national$natl.pct.ed.college.all
 
 
@@ -202,7 +199,7 @@ allcounties_wide$natl.pct.ed.college.all <- national$natl.pct.ed.college.all
 allcounties_wide$medincome.abovebelow.natl <- if_else((allcounties_wide$medincome < allcounties_wide$natl.medincome), 'BELOW', 'ABOVE')
 allcounties_wide$medage.abovebelow.natl <- if_else((allcounties_wide$medage < allcounties_wide$natl.medage), 'BELOW', 'ABOVE')
 allcounties_wide$medhomevalue.abovebelow.natl <- if_else((allcounties_wide$medhomevalue < allcounties_wide$natl.medhomevalue), 'BELOW', 'ABOVE')
-allcounties_wide$pct.civ.unemployed.abovebelow.natl <- if_else((allcounties_wide$pct.civ.unemployed < allcounties_wide$natl.pct.civ.unemployed), 'BELOW', 'ABOVE')
+# allcounties_wide$pct.civ.unemployed.abovebelow.natl <- if_else((allcounties_wide$pct.civ.unemployed < allcounties_wide$natl.pct.civ.unemployed), 'BELOW', 'ABOVE')
 allcounties_wide$pct.ed.college.all.abovebelow.natl <- if_else((allcounties_wide$pct.ed.college.all < allcounties_wide$natl.pct.ed.college.all), 'BELOW', 'ABOVE')
 
 
@@ -227,17 +224,26 @@ allcounties_wide <- inner_join(allcounties_wide, state_codes) %>%
 
 #### ADDING BLS UNEMPLOYMENT RATES ####
 
-#import file downloaded from bls
+# import file downloaded from bls
 # https://www.bls.gov/lau/laucnty18.xlsx
 
 unemployment <- readxl::read_excel("processed_data/laucnty18_reformatted.xlsx")
 
+#clean names and create geoid field for matching
 unemployment <- unemployment %>% 
   clean_names() %>% 
   mutate(
-    GEOID = paste0(state_fips, county_fips)
+    geoid = paste0(state_fips, county_fips)
   )
 
+#just pull out the columns for the join
+unemployment_forjoin <- unemployment %>% 
+  select(geoid, unemployment_rate_2018)
+
+#join the unemployment rate with the main table
+joined <- left_join(allcounties_wide, unemployment_forjoin)
+
+names(joined)
 
 
 
