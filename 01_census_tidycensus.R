@@ -9,31 +9,23 @@ options(tigris_class = "sf")
 
 # census_api_key(Sys.getenv("MYCENSUSAPIKEY"), install=TRUE)
 
+# v18 <- load_variables(2018, "acs5", cache = TRUE)
+# write_xlsx(v18, "v18.xlsx")
 
 #### SET CENSUS VARIABLES TO BE PULLED ####
 
 myvars <- c(totalpop = "B01003_001",
             medincome = "B19013_001",
             medage = "B01002_001",
-            natborn.total = "B05012_001", 
-            natborn.foreign = "B05012_003",
-            military.total = "B21001_001",
-            military.veteran = "B21001_002",
-            originrace.total.all = "B03002_001",
-            originrace.whitealone = "B03002_003",
+            medhomevalue = "B25077_001",
             education.total = "B06009_001",
             education.bachelors = "B06009_005",  
-            education.gradprofess = "B06009_006",
-            white.ed.totalall = "C15002H_001",
-            white.ed.male.total = "C15002H_002",
-            white.ed.male.bachelors = "C15002H_006",
-            white.ed.female.total = "C15002H_007",
-            white.ed.female.bachelors = "C15002H_011"
+            education.gradprofess = "B06009_006"
             )
 
 
 # # #temp labels to pull individual census variables
-# myvars <- c(varname = "GCT2701_HC01")
+# myvars <- c(varname = "GCT2510_001")
 # 
 # GCT2701_HC01
 
@@ -56,11 +48,42 @@ vt <- get_acs(geography = "county",
 #Getting data for every state ####
 
 head(fips_codes) #built into tidycensus
-us <- unique(fips_codes$state)[1:51]
+us <- as_tibble(unique(fips_codes$state)[1:51])
+
+
+#getting data for SUPER TUES and SUPER TUES II states
+targetstates <- us %>% 
+  filter(value %in% c("AL",
+                      "AK",
+                      "CA",
+                      "CO",
+                      "ME",
+                      "MA",
+                      "MN",
+                      "NC",
+                      "OK",
+                      "TN",
+                      "TX",
+                      "UT",
+                      "VT",
+                      "VA",
+                      "MI",
+                      "WA",
+                      "MO",
+                      "MI",
+                      "ID",
+                      "ND")
+                     ) %>% 
+                  pull()
+
+
+
+
+
 
 
 #download data in wide format to allow for subsequent pct calculations
-allcounties_wide <- map_df(us, function(x) {
+allcounties_wide <- map_df(targetstates, function(x) {
   get_acs(geography = "county", variables = c(currentchoice), 
           state = x, output = "wide")
 })
